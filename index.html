@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<!-- Tic-Tac-Toe 1.1 -->
+<!-- By Esdras Lopez -->
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<title>Tic-Tac-Toe</title>
+	<style type = "text/css">
+		div.content	{
+					height: 385px;
+										
+					padding:10px;
+					background-color: white; 
+					box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.4); 
+					border-radius: 12px;
+					border-radius: 7px;
+					}
+	</style>
+	<script>
+		
+		var playerImage = new Image();
+		playerImage.src = "x.png";
+
+		var computerImage = new Image();
+		computerImage.src = "o.png";
+
+		// Hold all the moves on the board
+		var board = new Array();
+
+		var BOARD_SIZE = 9;
+		var UNOCCUPIED = ' ';
+		var HUMAN_PLAYER = 'X';
+		var COMPUTER_PLAYER = 'O';
+
+		var playerMove = true;
+
+
+		// Start a new game by changing all the squares to blank.png
+		function NewGame()
+		{
+			for (var i = 0; i < BOARD_SIZE; i++)
+			{
+				board[i] = UNOCCUPIED;
+				document.images[i].src = "blank.png";
+			}
+			
+			document.getElementById('turnInfo').innerHTML = 'Your turn.';
+			playerMove = true;
+		}
+
+		// This function is triggered by the user clicking on the game board
+		function MakeMove(e)
+		{		
+			// Determine the position in the array from the square's ID
+			var pos = parseInt(e.target.id);
+			if(board[pos] == UNOCCUPIED && playerMove == true)
+			{
+				board[pos] = HUMAN_PLAYER;
+				document.images[pos].src = playerImage.src;
+				playerMove = false;
+				
+				if (!GameOver())			
+				{
+					// If the game is not over then it's the computer's turn
+					if (!GameOver())
+					{
+						document.getElementById('turnInfo').innerHTML = "Computer's turn.";	
+						setTimeout(MakeComputerMove, 1000);
+					}
+				}
+			}
+		}
+
+		// Generate a random move for the computer
+		function MakeComputerMove()
+		{
+			for (var i = 0; i < 9; i++)
+			{
+				var move = board[i];
+				if(board[i] != HUMAN_PLAYER && board[i] != COMPUTER_PLAYER)
+				{
+					board[i] = COMPUTER_PLAYER;
+					if(CheckForWinner() == 3)
+					{
+						document.images[i].src = computerImage.src;
+						userTurn();
+						return;
+					}
+					else
+						board[i] = move;
+				}
+			}
+
+			for (var i = 0; i < 9; i++)
+			{
+				var move = board[i];
+				if(board[i] != HUMAN_PLAYER && board[i] != COMPUTER_PLAYER)
+				{
+					board[i] = HUMAN_PLAYER;
+					if(CheckForWinner() == 2)
+					{	
+						board[i] = COMPUTER_PLAYER;
+						document.images[i].src = computerImage.src;
+						userTurn();
+						return;
+					}
+					else
+						board[i] = move;
+				}
+
+			}
+
+			// Keep count of how many times we try to pick an unoccuppied slot so we avoid
+			// accidentally getting stuck in the loop
+			var count = 0;
+			do
+			{
+				var move = Math.floor(Math.random() * BOARD_SIZE);
+				count++;
+			} while ((board[move] == HUMAN_PLAYER || board[move] == COMPUTER_PLAYER) && count < 100);
+
+			if (count == 100)
+				document.getElementById('turnInfo').innerHTML = "There's something wrong... computer can't find an open move.";
+			else
+			{
+				board[move] = COMPUTER_PLAYER;
+				document.images[move].src = computerImage.src;
+			}
+			
+			userTurn();
+		}
+		
+		// Activates the user input
+		function userTurn()
+		{
+			// If the game is not over then it's the users' turn
+			if (!GameOver())
+			{
+				document.getElementById('turnInfo').innerHTML = 'Your turn.';
+				playerMove = true;
+			}
+		}
+		
+		// Check for a winner.  Return
+		//   0 if no winner or tie yet
+		//   1 if it's a tie
+		//   2 if X won
+		//   3 if O won
+		function CheckForWinner() 
+		{
+			var i;
+			
+			// Check for horizontal wins
+			for (i = 0; i <= 6; i += 3) 
+			{
+				if (board[i] == HUMAN_PLAYER && board[i+1] == HUMAN_PLAYER && board[i+2] == HUMAN_PLAYER)
+					return 2;
+				if (board[i] == COMPUTER_PLAYER && board[i+1] == COMPUTER_PLAYER && board[i+2] == COMPUTER_PLAYER)
+					return 3;
+			}
+
+			// Check for vertical wins
+			for (i = 0; i <= 2; i++) 
+			{
+				if (board[i] == HUMAN_PLAYER && board[i+3] == HUMAN_PLAYER && board[i+6] == HUMAN_PLAYER)
+					return 2;
+				if (board[i] == COMPUTER_PLAYER && board[i+3] == COMPUTER_PLAYER && board[i+6] == COMPUTER_PLAYER)
+					return 3;
+			}
+
+			// Check for diagonal wins
+			if ((board[0] == HUMAN_PLAYER && board[4] == HUMAN_PLAYER && board[8] == HUMAN_PLAYER) ||
+				(board[2] == HUMAN_PLAYER && board[4] == HUMAN_PLAYER && board[6] == HUMAN_PLAYER))
+				return 2;
+			if ((board[0] == COMPUTER_PLAYER && board[4] == COMPUTER_PLAYER && board[8] == COMPUTER_PLAYER) ||
+				(board[2] == COMPUTER_PLAYER && board[4] == COMPUTER_PLAYER && board[6] == COMPUTER_PLAYER))
+				return 3;
+
+			// Check for tie
+			for (i = 0; i < BOARD_SIZE; i++)
+			{
+				// If we find a number, then no one has won yet
+				if (board[i] != HUMAN_PLAYER && board[i] != COMPUTER_PLAYER)
+					return 0;
+			}
+
+			// If we make it through the previous loop, all places are taken, so it's a tie
+			return 1;
+		}
+
+
+		// This function should call CheckForWinner() to determine if the game is over or not.  If
+		// the game is over, it should display who won and returns true, otherwise it returns false.
+		function GameOver()
+		{
+			var result = CheckForWinner();
+			if(result === 3)
+			{
+				document.getElementById('turnInfo').innerHTML = "Computer wins!";
+				return true;
+			}
+			else if(result === 2)
+			{
+				document.getElementById('turnInfo').innerHTML = "You win!";
+				return true;
+			}
+			else if(result === 1)
+			{
+				document.getElementById('turnInfo').innerHTML = "It's a tie!";
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		// This function is called when the web page finishes loading
+		function Start()
+		{
+			
+			// Register all event listeners
+			for (var i = 0; i < 9; i++)
+				document.getElementById(i + "square").addEventListener("click", MakeMove, false);
+			
+			document.getElementById("newgame").addEventListener("click", NewGame, false);
+			
+			NewGame();
+		}
+		// When ready...
+		window.addEventListener("load",function() {
+		  // Set a timeout...
+		  setTimeout(function(){
+			// Hide the address bar!
+			window.scrollTo(0, 1);
+		  }, 0);
+		});
+		window.addEventListener("load", Start, false);
+	</script>
+</head>
+
+<body>
+
+<div class = "content">
+	<h1 style="text-align:center; width:280; position:absolute; left:85px; top:-5px;">Tic-Tac-Toe</h1>
+
+	<img src="blank.png" width="75" height="71" id="0square" style="position:absolute; left:25px; top:70px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="1square" style="position:absolute; left:125px; top:70px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="2square" style="position:absolute; left:225px; top:70px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="3square" style="position:absolute; left:25px; top:170px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="4square" style="position:absolute; left:125px; top:170px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="5square" style="position:absolute; left:225px; top:170px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="6square" style="position:absolute; left:25px; top:270px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="7square" style="position:absolute; left:125px; top:270px; z-index:1" />
+	<img src="blank.png" width="75" height="71" id="8square" style="position:absolute; left:225px; top:270px; z-index:1" />
+
+	<img src="board.png" id="gameBoard" width="270" height="270"  
+	 style="position:absolute; left:25px; top:70px; z-index:0" />
+
+	<p id="turnInfo" style="text-align:center; width:280px; position:absolute; left:22px; top:340px; z-index:1" >
+	TURN INFO
+	</p>
+
+	<form>
+		<input type="button" value="New Game" id="newgame" 
+			style="position:absolute; left:118px; top:385px; z-index:1"/>
+	</form>
+</div>	
+
+</body>
+</html>
